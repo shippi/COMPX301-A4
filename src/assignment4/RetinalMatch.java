@@ -13,7 +13,7 @@ public class RetinalMatch {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		// test code (do whatever in the main method, but leave loadLibrary alone)
-		Mat src = Imgcodecs.imread("RIDB/IM000001_2.JPG");
+		Mat src = Imgcodecs.imread("RIDB/IM000003_7.JPG");
 		Mat dst = new Mat();
 		
 		// turn the src greyscale and store in dst
@@ -21,10 +21,11 @@ public class RetinalMatch {
 		
 		// pipeline
 		resize(dst, 60);
-		increaseContrast(dst);
+		autoContrast(dst);
 		gaussianBlur(dst);
 		adaptiveThreshold(dst);
-				
+
+		
 		Imgcodecs.imwrite("test.jpg",dst);	// writes image out to file
 	}
 	
@@ -43,8 +44,8 @@ public class RetinalMatch {
 	 * Increases the contrast of the image
 	 * @param img
 	 */
-	public static void increaseContrast(Mat img) {
-		img.convertTo(img, -1, 3.6, -220);
+	public static void autoContrast(Mat img) {
+		Imgproc.equalizeHist(img, img);
 	}
 	
 	/**
@@ -52,7 +53,7 @@ public class RetinalMatch {
 	 * @param img
 	 */
 	public static void adaptiveThreshold(Mat img) {
-		Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 11, 8);
+		Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 11, 10);
 	}
 	
 	/**
