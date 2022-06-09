@@ -23,31 +23,45 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000001_1.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
-        // turn the src greyscale and store in dst
+        // turn the sr
+        //c greyscale and store in dst
         resize(src,60);
+
 
 //        HighGui.imshow("Gaussian",src);
 //        HighGui.waitKey();
-        //bilateralFilter(src, dst);
-        Imgproc.cvtColor(src, src_Gray, Imgproc.COLOR_BGR2GRAY);
+        gaussianSharpen(src, dst);
+        gaussianSharpen(dst, laplace);
+        Imgproc.cvtColor(laplace, src_Gray, Imgproc.COLOR_BGR2GRAY);
         CLAHEApply(src_Gray,laplace);
-        bilateralFilter(laplace,dst);
+        autoContrast(laplace);
+        //gaussianSharpen(dst,laplace);
         Mat Sobel = new Mat();
-//        SobelTransform(dst,Sobel);
-        adaptiveThreshold(dst);
-        Imgcodecs.imwrite("test1_1.jpg", dst);
-        HighGui.imshow("Gaussian",dst);
+        //adaptiveThreshold(dst);
+        Imgcodecs.imwrite("test1_1.jpg", laplace);
+        HighGui.imshow("Gaussian",laplace);
         HighGui.waitKey();
 
-        autoContrast(src_Gray);
+
         Mat bf = new Mat();
-        bilateralFilter(src_Gray,bf);
-        HighGui.imshow("Gaussian",bf);
+        bilateralFilter(laplace,bf);
+        Mat newbf = new Mat();
+        gaussianSharpen(bf, newbf);
+       //medianBlur(newbf);
+        bilateralFilter(newbf,bf);
+        autoContrast(bf);
+        gaussianBlur(bf, newbf);
+        gaussianBlur(newbf, bf);
+        medianBlur(bf);
+        SobelTransform(bf, newbf);
+        //adaptiveThreshold(bf);
+        HighGui.imshow("Gaussian",newbf);
         HighGui.waitKey();
+
 //
 //        gaussianSharpen(src_Gray,dst);
 //
@@ -140,9 +154,9 @@ public class Main {
      * Applies a gaussian blur to the image
      * @param img
      */
-    public static void gaussianBlur(Mat img) {
+    public static void gaussianBlur(Mat img, Mat src) {
         for(int i = 1; i < 11; i=i+2) {
-            Imgproc.GaussianBlur(img, img, new Size(i, i), 1, 1, Core.BORDER_DEFAULT);
+            Imgproc.GaussianBlur(img, src, new Size(i, i), 1, 1, Core.BORDER_DEFAULT);
         }
     }
     /**
