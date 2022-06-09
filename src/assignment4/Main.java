@@ -1,4 +1,4 @@
-package com.company;
+package assignment4;
 
 import org.opencv.core.*;
 import org.opencv.core.Point;
@@ -59,7 +59,9 @@ public class Main {
         medianBlur(bf);
         SobelTransform(bf, newbf);
         //adaptiveThreshold(bf);
-        HighGui.imshow("Gaussian",newbf);
+        Mat mask = new Mat();
+        applyMask(laplace, mask);
+        HighGui.imshow("Mask", mask);
         HighGui.waitKey();
 
 //
@@ -150,6 +152,20 @@ public class Main {
     {
         Imgproc.bilateralFilter(img, dst, 12,50,50,Core.BORDER_DEFAULT);
     }
+    
+    /**
+     * 
+     */
+    public static void applyMask(Mat img, Mat dst) {
+        Mat mask = new Mat(img.rows(), img.cols(), CvType.CV_8U);
+        Core.bitwise_not(img, img);
+        Imgproc.circle(mask, new Point(img.cols()/2 - img.cols()/60, img.rows()/2 + img.rows()/65), 315, new Scalar(255,255,255), -1, 8, 0 );
+        Imgproc.rectangle(mask, new Point(0, 0),  new Point(img.cols(), img.rows()/13), new Scalar(0,0,0), -1);
+        Imgproc.rectangle(mask, new Point(0, img.rows()),  new Point(img.cols(), img.rows() - img.rows()/15), new Scalar(0,0,0), -1);
+        img.copyTo(dst, mask);
+        Core.bitwise_not(dst, dst);
+    }
+    
     /**
      * Applies a gaussian blur to the image
      * @param img
