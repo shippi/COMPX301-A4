@@ -3,6 +3,7 @@ package com.company;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
@@ -22,29 +23,41 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000001_1.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
         // turn the src greyscale and store in dst
         resize(src,60);
 
-        HighGui.imshow("Gaussian",src);
-        HighGui.waitKey();
-        bilateralFilter(src, dst);
-        Imgproc.cvtColor(dst, src_Gray, Imgproc.COLOR_BGR2GRAY);
-
-
-        gaussianSharpen(src_Gray,dst);
+//        HighGui.imshow("Gaussian",src);
+//        HighGui.waitKey();
+        //bilateralFilter(src, dst);
+        Imgproc.cvtColor(src, src_Gray, Imgproc.COLOR_BGR2GRAY);
+        CLAHEApply(src_Gray,laplace);
+        bilateralFilter(laplace,dst);
+        Mat Sobel = new Mat();
+//        SobelTransform(dst,Sobel);
+        adaptiveThreshold(dst);
+        Imgcodecs.imwrite("test1_1.jpg", dst);
         HighGui.imshow("Gaussian",dst);
         HighGui.waitKey();
-        autoContrast(dst);
-        gaussianBlur(dst);
-        gaussianSharpen(dst,src_Gray);
-        autoContrast(src_Gray);
-        laplaceTransform(src_Gray,dst);
-        //adaptiveThreshold(src_Gray);
 
+        autoContrast(src_Gray);
+        Mat bf = new Mat();
+        bilateralFilter(src_Gray,bf);
+        HighGui.imshow("Gaussian",bf);
+        HighGui.waitKey();
+//
+//        gaussianSharpen(src_Gray,dst);
+//
+//        autoContrast(dst);
+//        gaussianBlur(dst);
+//        gaussianSharpen(dst,src_Gray);
+//        autoContrast(src_Gray);
+//        //laplaceTransform(src_Gray,dst);
+//        adaptiveThreshold(src_Gray);
+//
 
 //        gaussianSharpen(dst,src_Gray);
 
@@ -66,9 +79,17 @@ public class Main {
 //
 //        //Dilate(src_Gray);
 //        //Erode(src_Gray);
-////       Imgcodecs.imwrite("test1_1.jpg", src_Gray);    // writes image out to file
+////          // writes image out to file
 //        HighGui.imshow("Gaussian",src_Gray);
 //        HighGui.waitKey();
+    }
+    /**
+     *
+     */
+    public static void CLAHEApply(Mat src, Mat dst)
+    {
+        CLAHE clahe = Imgproc.createCLAHE();
+        clahe.apply(src,dst);
     }
     /**
      *
