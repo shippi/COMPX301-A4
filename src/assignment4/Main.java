@@ -1,4 +1,4 @@
-package com.company;
+package assignment4;
 
 import org.opencv.core.*;
 import org.opencv.core.Point;
@@ -23,7 +23,7 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000002_7.JPG");
         Mat src2 = Imgcodecs.imread("RIDB/IM000003_7.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
@@ -47,7 +47,7 @@ public class Main {
         Mat sharpen = new Mat();
         gaussianSharpen(sobel,sharpen);
         Mat result = new Mat();
-        applyMask(sharpen, result);
+        applyMaskAndCrop(sharpen, result);
         //turn the colors to binary
         medianBlur(result);
         adaptiveThreshold(result);
@@ -181,7 +181,7 @@ public class Main {
     /**
      *
      */
-    public static void applyMask(Mat img, Mat dst) {
+    public static void applyMaskAndCrop(Mat img, Mat dst) {
         Mat mask = new Mat(img.rows(), img.cols(), CvType.CV_8U);
         Mat newImg = new Mat();
         Core.bitwise_not(img, newImg);
@@ -190,8 +190,19 @@ public class Main {
         Imgproc.rectangle(mask, new Point(0, 0),  new Point(img.cols(), img.rows()/13), new Scalar(0,0,0), -1);
         Imgproc.rectangle(mask, new Point(0, img.rows()),  new Point(img.cols(), img.rows() - img.rows()/15), new Scalar(0,0,0), -1);
         img.copyTo(dst, mask);
+        
+        
+        int[][] translateArr = {{1, 0, -(img.cols()/7)}, {0, 1, -(img.rows()/13)}};
+        Mat translation = new Mat(2, 3, CvType.CV_32F);
+        
+        for(int i = 0; i < 2; i++) {
+        	for(int j = 0; j < 3; j++) {
+        		translation.put(i, j, translateArr[i][j]);
+        	}
+        }
+        
+        Imgproc.warpAffine(dst, dst, translation, new Size(img.cols() - (img.cols()/19 * 6), img.rows() - img.rows()/7));
         Core.bitwise_not(dst, dst);
-        HighGui.imshow("dst", dst);
     }
 
     /**
