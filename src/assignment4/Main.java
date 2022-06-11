@@ -24,8 +24,8 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000001_8.JPG");
-        Mat src2 = Imgcodecs.imread("RIDB/IM000003_8.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
+        Mat src2 = Imgcodecs.imread("RIDB/IM000002_7.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
@@ -309,7 +309,7 @@ public class Main {
     	        	}
     	        }
     	        Imgproc.warpAffine(src1, template, translation, new Size(src1.cols()/numSplits , src1.rows()/numSplits));
-    	        Imgcodecs.imwrite("template" + i + "_" + j + ".jpg", template);
+    	        //Imgcodecs.imwrite("template" + i + "_" + j + ".jpg", template);
     	        
     	        // block of code that does the matching
     	        Imgproc.matchTemplate(src2, template, result, Imgproc.TM_CCOEFF_NORMED);
@@ -319,6 +319,8 @@ public class Main {
     	        if(mmr.maxVal > threashhold) {
     	            Imgproc.rectangle(src2, matchLoc, new Point(matchLoc.x + template.cols(),
     	                    matchLoc.y + template.rows()), new Scalar(0, 255, 255));
+    	            Imgproc.rectangle(src1, new Point((src1.cols()/numSplits) * j, (src1.rows()/numSplits) * i), 
+    	            		new Point((src1.cols()/numSplits) * (j + 1), (src1.rows()/numSplits) * (i+1)), new Scalar(0, 255, 255));
     	            return true;
     	        }
     		}
