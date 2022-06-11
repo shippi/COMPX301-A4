@@ -23,7 +23,7 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000002_7.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000001_9.JPG");
         Mat src2 = Imgcodecs.imread("RIDB/IM000003_7.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
@@ -47,7 +47,8 @@ public class Main {
         Mat sharpen = new Mat();
         gaussianSharpen(sobel,sharpen);
         Mat result = new Mat();
-        applyMaskAndCrop(sharpen, result);
+        applyMask(sharpen, result);
+        applyCrop(result);
         //turn the colors to binary
         medianBlur(result);
         adaptiveThreshold(result);
@@ -181,7 +182,7 @@ public class Main {
     /**
      *
      */
-    public static void applyMaskAndCrop(Mat img, Mat dst) {
+    public static void applyMask(Mat img, Mat dst) {
         Mat mask = new Mat(img.rows(), img.cols(), CvType.CV_8U);
         Mat newImg = new Mat();
         Core.bitwise_not(img, newImg);
@@ -190,8 +191,11 @@ public class Main {
         Imgproc.rectangle(mask, new Point(0, 0),  new Point(img.cols(), img.rows()/13), new Scalar(0,0,0), -1);
         Imgproc.rectangle(mask, new Point(0, img.rows()),  new Point(img.cols(), img.rows() - img.rows()/15), new Scalar(0,0,0), -1);
         img.copyTo(dst, mask);
-        
-        
+        Core.bitwise_not(dst, dst);
+    }
+    
+    public static void applyCrop(Mat img) {
+
         int[][] translateArr = {{1, 0, -(img.cols()/7)}, {0, 1, -(img.rows()/13)}};
         Mat translation = new Mat(2, 3, CvType.CV_32F);
         
@@ -201,10 +205,8 @@ public class Main {
         	}
         }
         
-        Imgproc.warpAffine(dst, dst, translation, new Size(img.cols() - (img.cols()/19 * 6), img.rows() - img.rows()/7));
-        Core.bitwise_not(dst, dst);
+        Imgproc.warpAffine(img, img, translation, new Size(img.cols() - (img.cols()/19 * 6), img.rows() - img.rows()/7));
     }
-
     /**
      * Applies a gaussian blur to the image
      * @param img
@@ -270,6 +272,13 @@ public class Main {
             Imgproc.medianBlur(img,img,i);
         }
     }
+    
+    public static Boolean checkMatching(Mat src1, Mat src2) {
+    	int numSplits = 3;
+    	Mat template = new Mat();
+    	
+    	return false;
+    }
     public static void createHistogram(String string) {
         try {
             FileWriter writer = new FileWriter("pixelValues.txt");
@@ -314,8 +323,6 @@ public class Main {
             System.out.println(e);
         }
     }
-
-
 }
 
 class pixelArrayValues {
