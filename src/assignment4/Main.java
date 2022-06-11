@@ -1,4 +1,4 @@
-package assignment4;
+package com.company;
 
 import org.opencv.core.*;
 import org.opencv.core.Point;
@@ -24,46 +24,54 @@ public class Main {
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
         Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
+        Mat src2 = Imgcodecs.imread("RIDB/IM000003_7.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
-        // turn the sr
-        //c greyscale and store in dst
+        Mat dst2 = new Mat();
+        Mat src_Gray2 = new Mat();
+        Mat laplace2 = new Mat();
+
         resize(src,60);
+        //Apply contrast to the image
+        Mat contrast1 = contrastApply(src);
+        //clean up some noise
+        gaussianBlur(contrast1,dst);
+        //change color to gray
+        Imgproc.cvtColor(dst, src_Gray, Imgproc.COLOR_BGR2GRAY);
+        //????
+        Mat loc = new Mat();
+        gaussianSharpen(src_Gray,loc);
+        Mat sobel = new Mat();
+        SobelTransform(loc,sobel);
+        Mat sharpen = new Mat();
+        gaussianSharpen(sobel,sharpen);
+        Mat result = new Mat();
+        applyMask(sharpen, result);
+        //turn the colors to binary
+        medianBlur(result);
+        adaptiveThreshold(result);
+        HighGui.imshow("Dilate",result);
+        HighGui.waitKey();
 
-
-//        HighGui.imshow("Gaussian",src);
+//        resize(src2,60);
+//        gaussianBlur(src2,dst2);
+//        Imgproc.cvtColor(dst2, src_Gray2, Imgproc.COLOR_BGR2GRAY);
+//        Mat gBlur2 = new Mat();
+//        SobelTransform(src_Gray2,gBlur2);
+//        Mat mask2 = new Mat();
+//        applyMask(gBlur2,mask2);
+//        Mat ner2 = new Mat();
+//        bilateralFilter(mask2,ner2);
+//        CLAHEApply(mask2,ner2);
+//        Erode(ner2);
+//        Mat gB2 = new Mat();
+//        bilateralFilter(ner2,gB2);
+//        Erode(gB2);
+//        Dilate(gB2);
+//        medianBlur(gB2);
+//        HighGui.imshow("gblur", gB2);
 //        HighGui.waitKey();
-        gaussianSharpen(src, dst);
-        gaussianSharpen(dst, laplace);
-        Imgproc.cvtColor(laplace, src_Gray, Imgproc.COLOR_BGR2GRAY);
-        CLAHEApply(src_Gray,laplace);
-        autoContrast(laplace);
-        //gaussianSharpen(dst,laplace);
-        Mat Sobel = new Mat();
-        //adaptiveThreshold(dst);
-        Imgcodecs.imwrite("test1_1.jpg", laplace);
-        HighGui.imshow("Gaussian",laplace);
-        HighGui.waitKey();
-
-
-        Mat bf = new Mat();
-        bilateralFilter(laplace,bf);
-        Mat newbf = new Mat();
-        gaussianSharpen(bf, newbf);
-       //medianBlur(newbf);
-        bilateralFilter(newbf,bf);
-        autoContrast(bf);
-        gaussianBlur(bf, newbf);
-        gaussianBlur(newbf, bf);
-        medianBlur(bf);
-        SobelTransform(bf, newbf);
-        //adaptiveThreshold(bf);
-        Mat mask = new Mat();
-        applyMask(laplace, mask);
-        HighGui.imshow("Mask", mask);
-        HighGui.waitKey();
-
 //
 //        gaussianSharpen(src_Gray,dst);
 //
@@ -96,8 +104,21 @@ public class Main {
 //        //Dilate(src_Gray);
 //        //Erode(src_Gray);
 ////          // writes image out to file
-//        HighGui.imshow("Gaussian",src_Gray);
-//        HighGui.waitKey();
+    }
+//    public static void thresholding(Mat srcGray, Mat dst)
+//    {
+//        Imgproc.threshold(srcGray, dst, 90, 255, 4);
+//    }
+    public static Mat contrastApply(Mat src)
+    {
+        Mat dest = new Mat(src.rows(), src.cols(), src.type());
+        //Increasing the contrast of the image
+        src.convertTo(dest, -1, 1.5, 0);
+        return dest;
+    }
+    public static void inverseClear(Mat img)
+    {
+        Imgproc.adaptiveThreshold(img,img, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 7, 10);
     }
     /**
      *
@@ -110,17 +131,21 @@ public class Main {
     /**
      *
      */
-    public static void Erode(Mat img)
+    public static Mat Erode(Mat img)
     {
-        int kernel_size = 2;
+        int kernel_size = 1;
+        Mat dst = new Mat();
         Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(kernel_size+1,kernel_size+1),new Point(kernel_size,kernel_size));
-        Imgproc.erode(img,img,element);
+        Imgproc.erode(img,dst,element);
+        return  dst;
     }
-    public static void Dilate(Mat img)
+    public static Mat Dilate(Mat img)
     {
-        int kernel_size = 2;
+        int kernel_size = 1;
+        Mat dst = new Mat();
         Mat element = Imgproc.getStructuringElement(Imgproc.CV_SHAPE_RECT, new Size(kernel_size+1,kernel_size+1),new Point(kernel_size,kernel_size));
-        Imgproc.dilate(img,img,element);
+        Imgproc.dilate(img,dst,element);
+        return dst;
     }
     /**
      * Resizes a given image based on given scale.
@@ -146,33 +171,36 @@ public class Main {
      * @param img
      */
     public static void adaptiveThreshold(Mat img) {
-        Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 11, 10);
+        Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 11, 12);
     }
     public static void bilateralFilter(Mat img, Mat dst)
     {
         Imgproc.bilateralFilter(img, dst, 12,50,50,Core.BORDER_DEFAULT);
     }
-    
+
     /**
-     * 
+     *
      */
     public static void applyMask(Mat img, Mat dst) {
         Mat mask = new Mat(img.rows(), img.cols(), CvType.CV_8U);
-        Core.bitwise_not(img, img);
-        Imgproc.circle(mask, new Point(img.cols()/2 - img.cols()/60, img.rows()/2 + img.rows()/65), 315, new Scalar(255,255,255), -1, 8, 0 );
+        Mat newImg = new Mat();
+        Core.bitwise_not(img, newImg);
+        HighGui.imshow("bitwise", newImg);
+        Imgproc.circle(mask, new Point(img.cols()/2 - img.cols()/60, img.rows()/2 + img.rows()/65), 300, new Scalar(255,255,255), -1, 8, 0 );
         Imgproc.rectangle(mask, new Point(0, 0),  new Point(img.cols(), img.rows()/13), new Scalar(0,0,0), -1);
         Imgproc.rectangle(mask, new Point(0, img.rows()),  new Point(img.cols(), img.rows() - img.rows()/15), new Scalar(0,0,0), -1);
         img.copyTo(dst, mask);
         Core.bitwise_not(dst, dst);
+        HighGui.imshow("dst", dst);
     }
-    
+
     /**
      * Applies a gaussian blur to the image
      * @param img
      */
     public static void gaussianBlur(Mat img, Mat src) {
-        for(int i = 1; i < 11; i=i+2) {
-            Imgproc.GaussianBlur(img, src, new Size(i, i), 1, 1, Core.BORDER_DEFAULT);
+        for(int i = 1; i < 7; i=i+2) {
+            Imgproc.GaussianBlur(img, src, new Size(i, i), 3, 3, Core.BORDER_DEFAULT);
         }
     }
     /**
