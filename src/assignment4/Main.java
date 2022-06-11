@@ -1,6 +1,7 @@
 package assignment4;
 
 import org.opencv.core.*;
+import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.Point;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.CLAHE;
@@ -23,8 +24,8 @@ public class Main {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
-        Mat src = Imgcodecs.imread("RIDB/IM000001_9.JPG");
-        Mat src2 = Imgcodecs.imread("RIDB/IM000003_7.JPG");
+        Mat src = Imgcodecs.imread("RIDB/IM000001_8.JPG");
+        Mat src2 = Imgcodecs.imread("RIDB/IM000003_8.JPG");
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
@@ -33,6 +34,7 @@ public class Main {
         Mat laplace2 = new Mat();
 
         resize(src,60);
+        resize(src2,60);
         //Apply contrast to the image
         Mat contrast1 = contrastApply(src);
         //clean up some noise
@@ -52,9 +54,28 @@ public class Main {
         //turn the colors to binary
         medianBlur(result);
         adaptiveThreshold(result);
-        HighGui.imshow("Dilate",result);
+        HighGui.imshow("1",result);
+        
+        
+        // DAVID STUFF (TESTING MATCHING)
+        Mat contrast2 = contrastApply(src2);
+        gaussianBlur(contrast2,dst);
+        Imgproc.cvtColor(dst, src_Gray, Imgproc.COLOR_BGR2GRAY);
+        gaussianSharpen(src_Gray,loc);
+        SobelTransform(loc,sobel);
+        gaussianSharpen(sobel,sharpen);
+        Mat result2 = new Mat();
+        applyMask(sharpen, result2);
+        applyCrop(result2);
+        medianBlur(result2);
+        adaptiveThreshold(result2);
+        checkMatching(result, result2);   
+        HighGui.imshow("1",result);
+        HighGui.imshow("2",result2);      
         HighGui.waitKey();
-
+        
+        checkMatching(result, result2);  
+        System.exit(0);
 //        resize(src2,60);
 //        gaussianBlur(src2,dst2);
 //        Imgproc.cvtColor(dst2, src_Gray2, Imgproc.COLOR_BGR2GRAY);
@@ -186,7 +207,6 @@ public class Main {
         Mat mask = new Mat(img.rows(), img.cols(), CvType.CV_8U);
         Mat newImg = new Mat();
         Core.bitwise_not(img, newImg);
-        HighGui.imshow("bitwise", newImg);
         Imgproc.circle(mask, new Point(img.cols()/2 - img.cols()/60, img.rows()/2 + img.rows()/65), 300, new Scalar(255,255,255), -1, 8, 0 );
         Imgproc.rectangle(mask, new Point(0, 0),  new Point(img.cols(), img.rows()/13), new Scalar(0,0,0), -1);
         Imgproc.rectangle(mask, new Point(0, img.rows()),  new Point(img.cols(), img.rows() - img.rows()/15), new Scalar(0,0,0), -1);
@@ -275,8 +295,35 @@ public class Main {
     
     public static Boolean checkMatching(Mat src1, Mat src2) {
     	int numSplits = 3;
+    	double threashhold = 0.3;
     	Mat template = new Mat();
-    	
+    	Mat result = new Mat();
+    	for(int i = 0; i < numSplits; i++) {
+    		for(int j = 0; j < numSplits; j++) {
+    	    	// block of code to create the template for matching (currently only gets the last quarter)
+    	        int[][] translateArr = {{1, 0, -(src1.cols()/numSplits) * j}, {0, 1,  -(src1.rows()/numSplits) * i}};
+    	        Mat translation = new Mat(2, 3, CvType.CV_32F);
+    	        for(int row = 0; row < 2; row++) {
+    	        	for(int column = 0; column < 3; column++) {
+    	        		translation.put(row, column, translateArr[row][column]);
+    	        	}
+    	        }
+    	        Imgproc.warpAffine(src1, template, translation, new Size(src1.cols()/numSplits , src1.rows()/numSplits));
+    	        Imgcodecs.imwrite("template" + i + "_" + j + ".jpg", template);
+    	        
+    	        // block of code that does the matching
+    	        Imgproc.matchTemplate(src2, template, result, Imgproc.TM_CCOEFF_NORMED);
+    	        MinMaxLocResult mmr = Core.minMaxLoc(result);
+    	        Point matchLoc= mmr.maxLoc;
+    	        System.out.println(mmr.maxVal);
+    	        if(mmr.maxVal > threashhold) {
+    	            Imgproc.rectangle(src2, matchLoc, new Point(matchLoc.x + template.cols(),
+    	                    matchLoc.y + template.rows()), new Scalar(0, 255, 255));
+    	            return true;
+    	        }
+    		}
+    	}
+
     	return false;
     }
     public static void createHistogram(String string) {
