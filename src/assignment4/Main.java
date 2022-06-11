@@ -25,7 +25,7 @@ public class Main {
 
         // test code (do whatever in the main method, but leave loadLibrary alone)
         Mat src = Imgcodecs.imread("RIDB/IM000001_7.JPG");
-        Mat src2 = Imgcodecs.imread("RIDB/IM000002_7.JPG");
+        Mat src2 = Imgcodecs.imread("RIDB/IM000004_7.JPG"); 
         Mat dst = new Mat();
         Mat src_Gray = new Mat();
         Mat laplace = new Mat();
@@ -294,7 +294,7 @@ public class Main {
     }
     
     public static Boolean checkMatching(Mat src1, Mat src2) {
-    	int numSplits = 3;
+    	int numSplits = 4;
     	double threashhold = 0.3;
     	Mat template = new Mat();
     	Mat result = new Mat();
