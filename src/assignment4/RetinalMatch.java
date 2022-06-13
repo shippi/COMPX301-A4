@@ -1,8 +1,9 @@
-package assignment4;
+//package assignment4;
+
+import java.io.FileWriter;
 
 import org.opencv.core.*;
 import org.opencv.core.Core.MinMaxLocResult;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -11,20 +12,22 @@ public class RetinalMatch {
 	public static void main(String[] args){
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         
-        // Testing loop: takes a processed images and matches it against the rest of RIDB
-        Mat src = Imgcodecs.imread("RIDB/IM000002_13.JPG"); // CHANGE THIS FOR TESTING
+        Mat src = Imgcodecs.imread(args[0]);
+        Mat src2 = Imgcodecs.imread(args[1]); 
         processImage(src);
-       
-        for(int i = 1; i <= 20; i++) { // Loop that processes every image in RIDB and runs the match against 'src'
+        processImage(src2);
+        if(checkMatching(src, src2)) System.out.println("1");
+        else System.out.println("0");
+        
+        // Testing loop
+        /*for(int i = 1; i <= 20; i++) {
         	for (int j = 1; j <= 5; j++) {
-        		Mat src2 = Imgcodecs.imread("RIDB/IM00000" + j + "_" + i + ".JPG"); 
-                processImage(src2);
-                Boolean isMatch = checkMatching(src, src2);
-                System.out.print("Testing against " + j + "_" + i + ": ");
-                if(isMatch) System.out.print("1\n");
-                else System.out.print("0\n");
+                Mat src = Imgcodecs.imread("RIDB/IM00000" + j + "_" + i + ".JPG");
+                processImage(src);
+                System.out.println("Testing " + j + "_" + i + ": ");
+                matchAgainstRIDB(src, i, j + "_" + i);
         	}
-        }
+        }*/
 	}
 
     /**
@@ -73,7 +76,7 @@ public class RetinalMatch {
     }
     
     /**
-     * Applies a mask to the image remove the outline of the image,
+     * Applies a mask to the image to remove the outline,
      * also inverts the colour of the image.
      * @param img
      */
@@ -139,14 +142,8 @@ public class RetinalMatch {
     	        Imgproc.matchTemplate(src2, template, result, Imgproc.TM_CCOEFF_NORMED);
     	        MinMaxLocResult mmr = Core.minMaxLoc(result);
     	        
-    	        if(mmr.maxVal > threashhold) {
-    	        	//Point matchLoc= mmr.maxLoc;
-    	            //Imgproc.rectangle(src2, matchLoc, new Point(matchLoc.x + template.cols(),
-    	                    //matchLoc.y + template.rows()), new Scalar(0, 255, 255));
-    	            //Imgproc.rectangle(src1, new Point((src1.cols()/numSplits) * j, (src1.rows()/numSplits) * i), 
-    	            		//new Point((src1.cols()/numSplits) * (j + 1), (src1.rows()/numSplits) * (i+1)), new Scalar(0, 255, 255));
+    	        if(mmr.maxVal > threashhold)
     	            return true;
-    	        }
     		}
     	}
     	return false;
@@ -158,7 +155,7 @@ public class RetinalMatch {
      * @param img
      */
     public static void processImage(Mat img) {
-        resize(img, 50);
+        resize(img, 60);
         img.convertTo(img, -1, 1.5, 0); 
         Imgproc.GaussianBlur(img, img, new Size(5, 5), 3, 3, Core.BORDER_DEFAULT);
         Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2GRAY);
@@ -170,5 +167,36 @@ public class RetinalMatch {
         medianBlur(img);
         Imgproc.adaptiveThreshold(img, img, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 11, 12);
     }
-}
+    
+    /**
+     * Testing: gets a processed image and runs matches against the whole RIDB.
+     * If it matches where it shouldn't or doesn't match when it should, then it returns false.
+     * @param src Processed image
+     * @param pNum Person number that the image belongs to
+     * @param fileName Name of the image file used for 'src'
+     * @return
+     */
+    public static boolean matchAgainstRIDB(Mat src, int pNum, String fileName) {
+        for(int i = 1; i <= 20; i++) { // Loop that processes every image in RIDB and runs the match against 'src'
+        	for (int j = 1; j <= 5; j++) {
+        		Mat src2 = Imgcodecs.imread("RIDB/IM00000" + j + "_" + i + ".JPG"); 
+                processImage(src2);
+                Boolean isMatch = checkMatching(src, src2);
+                if(isMatch && pNum != i || !isMatch && pNum == i) {
+                	try {
+                		// writes out where it failed into text file
+                		FileWriter myWriter = new FileWriter("test_log.txt", true);
+                		myWriter.append("Test failed at " + fileName + " comparing to " + j + "_" + i + '\n');
+                		myWriter.close();
+                	}
+                	catch(Exception e) {}
+                	System.out.println("Test failed at " + fileName + " comparing to " + j + "_" + i);
+                	return false;
+                }
+        	}
+        }
+        System.out.println("Success");
+    	return true;
+    }
+ }
 
